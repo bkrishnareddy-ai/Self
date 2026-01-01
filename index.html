@@ -116,8 +116,8 @@
   </section>
 
   <section class="reveal random-area" onclick="igniteStardust(event)">
-    <div id="random-display">unearth a thought.</div>
-    <div class="discover-hint">tap to find more about me</div>
+    <div id="random-display">...</div>
+    <div class="discover-hint">tap for another spark</div>
   </section>
 
   <section class="reveal library-section">
@@ -330,6 +330,7 @@
       buildSite();
       initDust();
       drawDust();
+      igniteStardust();
       const obs = new IntersectionObserver(e => e.forEach(n => n.isIntersecting && n.target.classList.add('visible')), {threshold: 0.1});
       document.querySelectorAll('.reveal').forEach(r => obs.observe(r));
     };
@@ -338,6 +339,7 @@
 </body>
 
 </html>
+
 
 
 
