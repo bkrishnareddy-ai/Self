@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Krishna | Identity</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Cormorant+Garamond:ital,wght@0,300;0,600;1,300&family=Tenor+Sans&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg: #ffffff;
+      --text: #111;
+      --accent: #aaa;
+      --transition-slow: all 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+      --transition-med: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+      --ease: cubic-bezier(0.23, 1, 0.32, 1);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
+    body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; overflow-x: hidden; -webkit-font-smoothing: antialiased; width: 100%; }
+    
+    #dust-canvas { position: fixed; top: 0; left: 0; pointer-events: none; z-index: 0; width: 100%; height: 100%; }
+    
+    section { padding: 10vh 12vw; min-height: 40vh; display: flex; flex-direction: column; justify-content: center; position: relative; z-index: 1; }
+
+    /* Slow Reveal Animation */
+    .reveal { opacity: 0; transform: translateY(30px); transition: var(--transition-slow); }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+
+    /* 1. HERO */
+    .landing-hero { min-height: 100vh; }
+    .quote-stack { display: flex; flex-direction: column; gap: 0.5rem; max-width: 1100px; }
+    .q-line { font-family: 'Inter', sans-serif; font-weight: 100; font-size: clamp(1.3rem, 4.2vw, 2.5rem); line-height: 1.1; letter-spacing: -0.03em; opacity: 0; animation: slideFade 1.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+    .q-bold { font-weight: 500 !important; }
+    .q-thin { font-weight: 100 !important; }
+    .author-fade { font-family: 'Inter', sans-serif; font-weight: 300; font-size: clamp(0.7rem, 1.2vw, 0.8rem); text-transform: uppercase; letter-spacing: 0.4em; color: #333; margin-top: 3.5rem; opacity: 0; animation: slideFade 1.5s forwards; }
+
+    @keyframes slideFade {
+      0% { opacity: 0; transform: translateY(15px); filter: blur(8px); }
+      100% { opacity: 1; transform: translateY(0); filter: blur(0px); }
+    }
+
+    /* 2. IDENTITY (Slowed Down) */
+    .identity-container { display: flex; flex-direction: column; gap: 0.6rem; }
+    .name { font-family: 'Playfair Display', serif; font-weight: 700; font-size: clamp(2.2rem, 8vw, 3.8rem); letter-spacing: -2px; transition: var(--transition-slow); }
+    .sub-text { font-family: 'Playfair Display', serif; font-style: italic; font-size: clamp(1.1rem, 3.5vw, 1.6rem); color: #444; transition: var(--transition-slow); }
+
+    /* 3. QUIET HOURS */
+    .quiet-hours { text-align: center; }
+    .quiet-heading { font-family: 'Cormorant Garamond', serif; font-weight: 300; font-size: clamp(2rem, 7vw, 3.2rem); margin-bottom: 2rem; border-bottom: 1px solid #f0f0f0; padding-bottom: 10px; display: inline-block; }
+    .quiet-line { font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: clamp(0.9rem, 2.5vw, 1.2rem); text-transform: uppercase; letter-spacing: 0.4em; color: var(--accent); margin-bottom: 1.2rem; transition: var(--transition-med); }
+
+    /* 4. STARDUST (Enhanced Hover) */
+    .random-area { text-align: center; cursor: pointer; padding: 15vh 12vw; transition: var(--transition-med); }
+    #random-display { font-family: 'Cormorant Garamond', serif; font-size: clamp(1.6rem, 5.5vw, 2.8rem); font-style: italic; min-height: 80px; transition: var(--transition-med); max-width: 850px; margin: 0 auto; line-height: 1.2; }
+    .discover-hint { font-size: 0.6rem; letter-spacing: 0.4em; text-transform: uppercase; color: #eee; margin-top: 1.5rem; transition: var(--transition-med); }
+
+    /* 5. LIBRARY */
+    .library-section { min-height: 60vh; padding-top: 5vh; }
+    .tabs { display:flex; gap:2rem; margin-bottom:3rem; border-bottom:1px solid #f0f0f0; padding-bottom:0.8rem; }
+    .tab { font-family:'Playfair Display', serif; font-size:0.9rem; cursor:pointer; opacity:0.3; transition: 0.3s; }
+    .tab.active { opacity:1; font-weight: 700; font-style: italic; }
+    .books-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 2.5rem 1.5rem; width: 100%; }
+    .book-item { cursor: pointer; opacity: 0; transform: translateY(15px); animation: appear 0.8s var(--ease) forwards; }
+    @keyframes appear { to { opacity: 1; transform: translateY(0); } }
+    .cover-wrapper { width: 100%; aspect-ratio: 2 / 3; overflow: hidden; background: #f9f9f9; border-radius: 2px; transition: transform 0.6s var(--ease); }
+    .book-item img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 1.2s var(--ease); }
+    .book-info { max-height: 0; overflow: hidden; transition: all 0.6s var(--ease); opacity: 0; }
+    .book-item.active .book-info { max-height: 160px; opacity: 1; margin-top: 1rem; }
+    .book-title { font-family: 'Playfair Display', serif; font-size: 0.75rem; font-weight: 700; color: #111; display: block; }
+    .book-author { font-size: 0.55rem; text-transform: uppercase; color: var(--accent); display: block; margin-top: 4px; }
+    .book-desc { font-size: 0.65rem; font-style: italic; color: #777; line-height: 1.4; display: block; margin-top: 8px; }
+
+    /* 6. WHEEL */
+    .wheel-section { text-align: center; }
+    #wheel-container { position: relative; display: inline-block; width: 100%; max-width: 400px; opacity: 0; transition: 1.5s; margin: 0 auto; }
+    #wheel { width: 100%; height: auto; transition: transform 5s cubic-bezier(0.15, 0, 0.15, 1); }
+    .wheel-pointer { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); border-top: 18px solid #333; border-left: 9px solid transparent; border-right: 9px solid transparent; z-index: 10; }
+    .action-btn, .btn-ui { background: none; border: 1px solid #eee; padding: 12px 30px; border-radius: 50px; font-size: 0.65rem; letter-spacing: 0.2em; text-transform: uppercase; cursor: pointer; transition: 0.4s; color: var(--accent); }
+
+    /* DESKTOP HOVER STATES */
+    @media (hover: hover) {
+      .name:hover { transform: translateX(15px); color: #888; letter-spacing: -1px; }
+      .sub-text:hover { transform: translateX(5px); color: #000; }
+      .quiet-line:hover { color: var(--text); letter-spacing: 0.5em; transform: scale(1.02); }
+      /* Stardust Hover Effect */
+      .random-area:hover #random-display { transform: translateY(-8px) scale(1.02); color: #444; }
+      .random-area:hover .discover-hint { color: var(--text); letter-spacing: 0.6em; }
+      .book-item:hover .cover-wrapper { transform: translateY(-12px); box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
+      .book-item:hover img { transform: scale(1.1); }
+      .action-btn:hover, .btn-ui:hover { border-color: var(--text); color: var(--text); transform: translateY(-3px); background: #fafafa; }
+    }
+
+    @media (max-width: 768px) { 
+      section { padding: 8vh 8vw; } 
+      .books-grid { grid-template-columns: repeat(2, 1fr); gap: 1.5rem 1rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <canvas id="dust-canvas"></canvas>
+
+  <section class="landing-hero" id="hero-section"></section>
+
+  <section class="reveal">
+    <div class="identity-container" id="identity-section"></div>
+  </section>
+
+  <section class="reveal quiet-hours">
+    <h2 class="quiet-heading">Quiet Hours</h2>
+    <div class="quiet-content" id="quiet-list"></div>
+  </section>
+
+  <section class="reveal random-area" onclick="igniteStardust(event)">
+    <div id="random-display">unearth a thought.</div>
+    <div class="discover-hint">tap to find more about me</div>
+  </section>
+
+  <section class="reveal library-section">
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('reading', this)">Currently Reading</div>
+      <div class="tab" onclick="switchTab('library', this)">Archive</div>
+    </div>
+    <div id="books-container" class="books-grid"></div>
+  </section>
+
+  <section class="reveal wheel-section">
+    <div id="initial-spin-wrap">
+      <button class="action-btn" onclick="startWheelProcess()">Can we connect?</button>
+    </div>
+    <div id="wheel-interface" style="display:none;">
+      <h2 style="font-family:'Tenor Sans'; font-size:clamp(1.4rem, 4vw, 2rem); letter-spacing:0.2em; text-transform:lowercase; margin-bottom:0.5rem;">once we connect.</h2>
+      <p style="font-size:0.6rem; letter-spacing:0.3em; text-transform:uppercase; color:var(--accent); margin-bottom:2rem;">finding a path...</p>
+      <div id="wheel-container">
+        <div class="wheel-pointer"></div>
+        <canvas id="wheel" width="400" height="400"></canvas>
+        <h3 id="wheel-msg" style="font-family:'Tenor Sans'; font-size:2.2rem; margin-top:10px; opacity:0; transition:0.5s;">No.</h3>
+        <button id="try-again-btn" class="action-btn" style="display:none; margin: 15px auto;" onclick="resetAndSpin()">Try again?</button>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    const MY_DATA = {
+      heroQuote: {
+        lines: [
+          "I can never read all the books I want.",
+          "I can never live all the lives I imagine.",
+          "I want to feel every shade of experience",
+          "and i am terribly limited."
+        ],
+        author: "Sylvia Plath"
+      },
+      identity: {
+        name: "Krishna.",
+        taglines: ["Be kind.", "Stay curious."]
+      },
+      library: {
+        reading: [
+          { title: "Notes from Underground", author: "Dostoevsky", desc: "A mind arguing with itself.", cover: "https://i.pinimg.com/564x/41/5a/d3/415ad395b078a6352936a2826e793910.jpg" },
+          { title: "The Metamorphosis", author: "Kafka", desc: "A quiet change.", isbn: "0805210576" },
+          { title: "No Longer Human", author: "Dazai", desc: "Alienation.", isbn: "0811204811" },
+          { title: "The Stranger", author: "Camus", desc: "Absurdity.", isbn: "0679720200" } 
+        ],
+        archive: [
+          { title: "1984", author: "George Orwell", desc: "Control.", isbn: "0451524934" },
+          { title: "Dune", author: "Frank Herbert", desc: "Fear.", isbn: "0441172717" },
+          { title: "The Trial", author: "Kafka", desc: "A maze.", isbn: "0805210401" },
+          { title: "Siddhartha", author: "Hesse", desc: "The river.", isbn: "0553208845" },
+          { title: "Crime and Punishment", author: "Dostoevsky", desc: "Guilt.", isbn: "014044913X" }
+        ]
+      },
+      quietHours: [
+        "Philosophy. Literature. History.",
+        "Losing at chess.",
+        "voilà français",
+        "Drawing badly."
+      ],
+      stardustThoughts: [
+        "I read to breathe.",
+        "Silence is a conversation.",
+        "We are made of star-stuff.",
+        "The library is a garden.",
+        "Every exit is an entry somewhere else.",
+        "Curiosity is the wick in the candle of learning.",
+        "To live is the rarest thing in the world."
+      ]
+    };
+
+    let currentTab = 'reading';
+    let showAll = false;
+
+    function buildSite() {
+      const hero = document.getElementById('hero-section');
+      const lastLineDelay = 0.2 + ((MY_DATA.heroQuote.lines.length - 1) * 0.3);
+      hero.innerHTML = `
+        <div class="quote-stack">
+          ${MY_DATA.heroQuote.lines.map((line, i) => {
+            let processedLine = line;
+            let classList = "q-line";
+            if (line.toLowerCase().includes("limited")) {
+              classList += " q-bold";
+              processedLine = line.replace(/and/i, '<span class="q-thin">and</span>');
+            }
+            return `<span class="${classList}" style="animation-delay: ${0.2 + (i*0.3)}s">${processedLine}</span>`;
+          }).join('')}
+        </div>
+        <div class="author-fade" style="animation-delay: ${lastLineDelay + 0.6}s">~ ${MY_DATA.heroQuote.author}</div>
+      `;
+
+      const identity = document.getElementById('identity-section');
+      identity.innerHTML = `
+        <span class="name">${MY_DATA.identity.name}</span>
+        ${MY_DATA.identity.taglines.map((tag, i) => `<span class="sub-text" style="opacity: ${1 - (i*0.5)}">${tag}</span>`).join('')}
+      `;
+
+      renderLibrary();
+
+      const qList = document.getElementById('quiet-list');
+      qList.innerHTML = MY_DATA.quietHours.map(q => `<div class="quiet-line">${q}</div>`).join('');
+    }
+
+    function renderLibrary() {
+      const container = document.getElementById('books-container');
+      const list = currentTab === 'reading' ? MY_DATA.library.reading : MY_DATA.library.archive;
+      container.innerHTML = '';
+      let items = (currentTab === 'reading') ? list.slice(0, 4) : (showAll ? list : list.slice(0, 4));
+
+      items.forEach((book, index) => {
+        const coverURL = book.cover ? book.cover : `https://covers.openlibrary.org/b/isbn/${book.isbn}-L.jpg`;
+        const bookEl = document.createElement('div');
+        bookEl.className = 'book-item';
+        bookEl.style.animationDelay = `${index * 0.1}s`;
+        bookEl.onclick = function() { toggleBook(this); };
+        bookEl.innerHTML = `
+            <div class="cover-wrapper"><img src="${coverURL}" alt="${book.title}" loading="lazy"></div>
+            <div class="book-info">
+              <span class="book-title">${book.title}</span>
+              <span class="book-author">${book.author}</span>
+              <span class="book-desc">${book.desc}</span>
+            </div>
+        `;
+        container.appendChild(bookEl);
+      });
+
+      if (currentTab === 'archive' && list.length > 4) {
+        const controlsDiv = document.createElement('div');
+        controlsDiv.className = 'controls-section';
+        const btn = document.createElement('button');
+        btn.className = 'btn-ui';
+        btn.innerText = showAll ? 'Show Less' : 'View More Archive';
+        btn.onclick = function() { showAll = !showAll; renderLibrary(); };
+        controlsDiv.appendChild(btn);
+        container.appendChild(controlsDiv);
+      }
+    }
+
+    function toggleBook(el) {
+      const isActive = el.classList.contains('active');
+      document.querySelectorAll('.book-item').forEach(b => b.classList.remove('active'));
+      if(!isActive) el.classList.add('active');
+    }
+
+    function switchTab(tab, el) {
+      currentTab = tab === 'library' ? 'archive' : 'reading';
+      showAll = false; 
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      el.classList.add('active');
+      renderLibrary();
+    }
+
+    const dustCanvas = document.getElementById('dust-canvas');
+    const dctx = dustCanvas.getContext('2d');
+    let particles = [];
+    function initDust() {
+      dustCanvas.width = window.innerWidth; dustCanvas.height = window.innerHeight;
+      particles = [];
+      for(let i=0; i<30; i++) particles.push({ x: Math.random()*innerWidth, y: Math.random()*innerHeight, vx: (Math.random()-0.5)*0.05, vy: (Math.random()-0.5)*0.05, s: Math.random()*1 });
+    }
+    function drawDust() {
+      dctx.clearRect(0,0,innerWidth,innerHeight); dctx.fillStyle = "rgba(0,0,0,0.04)";
+      particles.forEach(p => { p.x += p.vx; p.y += p.vy; if(p.x<0) p.x=innerWidth; if(p.x>innerWidth) p.x=0; if(p.y<0) p.y=innerHeight; if(p.y>innerHeight) p.y=0; dctx.beginPath(); dctx.arc(p.x, p.y, p.s, 0, Math.PI*2); dctx.fill(); });
+      requestAnimationFrame(drawDust);
+    }
+
+    let lastThoughtIndex = -1;
+    function igniteStardust(e) {
+      const display = document.getElementById('random-display');
+      display.style.opacity = 0;
+      setTimeout(() => { 
+        let newIndex;
+        do { newIndex = Math.floor(Math.random() * MY_DATA.stardustThoughts.length); } while (newIndex === lastThoughtIndex);
+        lastThoughtIndex = newIndex;
+        display.textContent = MY_DATA.stardustThoughts[newIndex]; 
+        display.style.opacity = 1; 
+      }, 400);
+    }
+
+    const canvas = document.getElementById('wheel'); const ctx = canvas.getContext('2d');
+    const opts = ["Email", "LinkedIn", "Instagram", "Threads", "Slack", "TikTok", "X", "WhatsApp"];
+    let currentRotation = 0;
+    function drawWheel(rigIdx = -1) {
+      const s = (Math.PI*2)/8; ctx.clearRect(0,0,400,400);
+      opts.forEach((t, i) => {
+        ctx.save(); ctx.translate(200,200); ctx.rotate(i*s); ctx.beginPath(); ctx.moveTo(0,0); ctx.arc(0,0,190,0,s);
+        ctx.fillStyle = i%2===0 ? "#fff" : "#fbfbfa"; ctx.fill();
+        ctx.rotate(s/2); ctx.textAlign="right"; ctx.fillStyle="#444"; ctx.font="300 12px Inter";
+        ctx.fillText(i === rigIdx ? "No" : t, 170, 5); ctx.restore();
+      });
+    }
+    function startWheelProcess() {
+      document.getElementById('initial-spin-wrap').style.display = 'none';
+      document.getElementById('wheel-interface').style.display = 'block';
+      setTimeout(() => { document.getElementById('wheel-container').style.opacity = 1; drawWheel(); performSpin(); }, 50);
+    }
+    function performSpin() {
+      document.getElementById('wheel-msg').style.opacity = 0; document.getElementById('try-again-btn').style.display = 'none';
+      currentRotation += (3600 + Math.random() * 360);
+      canvas.style.transform = `rotate(${currentRotation}deg)`;
+      const loop = setInterval(() => {
+        const matrix = new WebKitCSSMatrix(window.getComputedStyle(canvas).transform);
+        const angle = (Math.atan2(matrix.b, matrix.a) * (180/Math.PI) + 360) % 360;
+        drawWheel(Math.floor(((360 - angle + 270) % 360) / 45));
+      }, 50);
+      setTimeout(() => { clearInterval(loop); document.getElementById('wheel-msg').style.opacity = 1; document.getElementById('try-again-btn').style.display = 'inline-block'; }, 5100);
+    }
+    function resetAndSpin() { performSpin(); }
+
+    window.onload = () => {
+      buildSite();
+      initDust();
+      drawDust();
+      const obs = new IntersectionObserver(e => e.forEach(n => n.isIntersecting && n.target.classList.add('visible')), {threshold: 0.1});
+      document.querySelectorAll('.reveal').forEach(r => obs.observe(r));
+    };
+    window.onresize = initDust;
+  </script>
+</body>
+</html>
