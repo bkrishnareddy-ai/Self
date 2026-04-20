@@ -7,7 +7,7 @@
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Cormorant+Garamond:ital,wght@0,300;0,500;0,600;1,300&family=Tenor+Sans&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Cormorant+Garamond:ital,wght@0,300;0,500;0,600;1,300&family=Tenor+Sans&family=Lora:ital,wght@1,300;1,400&display=swap" rel="stylesheet">
 
   <style>
     :root {
@@ -51,7 +51,7 @@
     .quiet-heading { font-family: 'Cormorant Garamond', serif; font-weight: 300; font-size: clamp(2rem, 7vw, 3.2rem); margin-bottom: 2rem; border-bottom: 1px solid #f0f0f0; padding-bottom: 10px; display: inline-block; }
     .quiet-line { font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: clamp(0.9rem, 2.5vw, 1.2rem); text-transform: uppercase; letter-spacing: 0.4em; color: var(--accent); margin-bottom: 1.2rem; transition: var(--transition-med); }
 
-    /* 4. STARDUST — tap-based, no word delay */
+    /* 4. STARDUST */
     .random-area {
       text-align: center;
       cursor: pointer;
@@ -63,37 +63,28 @@
     .random-area:active { opacity: 0.7; }
 
     #random-display {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: clamp(1.6rem, 5.5vw, 2.8rem);
-      font-weight: 500;
+      font-family: 'Lora', serif;
+      font-size: clamp(1.2rem, 3.8vw, 2.2rem);
+      font-weight: 300;
       font-style: italic;
+      color: #aaa;
       min-height: 80px;
       max-width: 850px;
       margin: 0 auto;
-      line-height: 1.4;
-      /* Single fade — no per-word animation */
+      line-height: 1.6;
+      letter-spacing: 0.01em;
       opacity: 0;
-      transform: translateY(10px) scale(0.99);
-      filter: blur(6px);
-      transition: opacity 0.7s var(--ease), transform 0.7s var(--ease), filter 0.7s var(--ease);
+      transform: translateY(8px);
+      filter: blur(4px);
+      transition: opacity 1.2s cubic-bezier(0.4, 0, 0.2, 1),
+                  transform 1.2s cubic-bezier(0.4, 0, 0.2, 1),
+                  filter 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+      pointer-events: none;
     }
     #random-display.visible {
       opacity: 1;
-      transform: translateY(0) scale(1);
+      transform: translateY(0);
       filter: blur(0px);
-    }
-    .tap-hint {
-      position: absolute;
-      bottom: 6vh;
-      left: 50%;
-      transform: translateX(-50%);
-      font-family: 'Inter', sans-serif;
-      font-size: 0.6rem;
-      letter-spacing: 0.3em;
-      text-transform: uppercase;
-      color: #ccc;
-      pointer-events: none;
-      transition: opacity 0.4s;
     }
 
     /* 5. LIBRARY */
@@ -162,10 +153,8 @@
     <div class="quiet-content" id="quiet-list"></div>
   </section>
 
-  <!-- STARDUST: tap to change, instant fade, no word-length delay -->
   <section class="reveal random-area" id="stardust-box">
     <div id="random-display"></div>
-    <span class="tap-hint">tap to stir</span>
   </section>
 
   <section class="reveal library-section">
@@ -202,7 +191,7 @@
         ],
         author: "Sylvia Plath"
       },
-      identity: { name: "Krishna.", taglines: ["   ", "Kind"] },
+      identity: { name: "Krishna.", taglines: [" Appreciate Life ", "Kind"] },
       library: {
         reading: [
           { title: "The Wedding Season", author: "Katy Birchall", desc: "A fake-dating pact spirals into real feelings.", cover: "https://raw.githubusercontent.com/bkrishnareddy-ai/Self/main/71Cc-xkldAL._AC_UF894%2C1000_QL80_.jpg" },
@@ -224,7 +213,7 @@
       ]
     };
 
-    let currentTab = 'reading', lastStarIdx = -1, starLocked = false, rot = 0;
+    let currentTab = 'reading', lastStarIdx = -1, rot = 0;
 
     // ─── BUILD ───────────────────────────────────────────────────────────────
 
@@ -252,42 +241,32 @@
       renderLibrary();
     }
 
-    // ─── STARDUST — single fade, tap-driven, NO word-count delay ────────────
+    // ─── STARDUST — debounced tap: counts all taps, fires only once after last tap ──
+
+    let tapTimer = null;
 
     function igniteStardust() {
-      if (starLocked) return;
-      starLocked = true;
-
-      const display = document.getElementById('random-display');
-
-      // Fade OUT
-      display.classList.remove('visible');
-
-      setTimeout(() => {
-        // Pick a different thought
-        let n;
-        do { n = Math.floor(Math.random() * MY_DATA.stardustThoughts.length); }
-        while (n === lastStarIdx && MY_DATA.stardustThoughts.length > 1);
-        lastStarIdx = n;
-
-        // Set text as plain text — no span splitting, no per-word delay
-        display.textContent = MY_DATA.stardustThoughts[n];
-
-        // Force reflow then fade IN
-        display.offsetHeight;
-        display.classList.add('visible');
-
-        // Unlock after transition finishes (~700ms)
-        setTimeout(() => { starLocked = false; }, 750);
-      }, 350); // wait for fade-out before swapping text
+      clearTimeout(tapTimer);
+      // Wait 300ms after the last tap, then change once
+      tapTimer = setTimeout(() => {
+        const display = document.getElementById('random-display');
+        display.classList.remove('visible');
+        setTimeout(() => {
+          let n;
+          do { n = Math.floor(Math.random() * MY_DATA.stardustThoughts.length); }
+          while (n === lastStarIdx && MY_DATA.stardustThoughts.length > 1);
+          lastStarIdx = n;
+          display.textContent = MY_DATA.stardustThoughts[n];
+          display.offsetHeight;
+          display.classList.add('visible');
+        }, 400);
+      }, 300);
     }
 
-    // Attach tap/click — both touch and mouse
-    document.getElementById('stardust-box').addEventListener('click', igniteStardust);
-    document.getElementById('stardust-box').addEventListener('touchend', (e) => {
-      e.preventDefault(); // prevent ghost click
+    document.getElementById('stardust-box').addEventListener('pointerdown', (e) => {
+      e.preventDefault();
       igniteStardust();
-    }, { passive: false });
+    });
 
     // ─── LIBRARY ─────────────────────────────────────────────────────────────
 
@@ -346,10 +325,9 @@
       requestAnimationFrame(drawDust);
     }
 
-    // ─── WHEEL — RIGGED: always shows "No." regardless of landing ────────────
+    // ─── WHEEL — RIGGED ───────────────────────────────────────────────────────
 
     const wCanvas = document.getElementById('wheel'), wctx = wCanvas.getContext('2d');
-    // All labels are decoys — the result is always "No."
     const opts = ["Email", "LinkedIn", "Instagram", "Threads", "Slack", "TikTok", "X", "WhatsApp"];
     let wheelSpinning = false;
 
@@ -370,7 +348,6 @@
         wctx.stroke();
         wctx.rotate(slice / 2);
         wctx.textAlign = "right";
-        // RIGGED: if this segment is highlighted (under pointer), show "No"
         wctx.fillStyle = (i === highlightIdx) ? "#c00" : "#444";
         wctx.font = (i === highlightIdx) ? "600 12px Inter" : "300 12px Inter";
         wctx.fillText(i === highlightIdx ? "No" : label, 170, 5);
@@ -389,12 +366,9 @@
     }
 
     function getPointerSegment() {
-      // Read the live CSS rotation of the canvas, find which segment is under the top pointer
       const style = window.getComputedStyle(wCanvas);
       const matrix = new DOMMatrix(style.transform);
-      // atan2 gives the rotation angle in radians
       let angleDeg = (Math.atan2(matrix.b, matrix.a) * (180 / Math.PI) + 360) % 360;
-      // Pointer is at top (270° / -90°). Segment index under pointer:
       const segmentDeg = 360 / opts.length;
       const pointerOffset = (360 - angleDeg + 270) % 360;
       return Math.floor(pointerOffset / segmentDeg) % opts.length;
@@ -409,23 +383,17 @@
       msgEl.style.opacity = 0;
       tryBtn.style.display = 'none';
 
-      // Add a large random spin amount
       rot += 3600 + Math.random() * 720;
       wCanvas.style.transition = 'transform 5s cubic-bezier(0.15, 0, 0.15, 1)';
       wCanvas.style.transform = `rotate(${rot}deg)`;
 
-      // While spinning, live-update the wheel to show "No" on whatever segment is under pointer
       const liveInterval = setInterval(() => {
         drawWheel(getPointerSegment());
       }, 40);
 
-      // After spin ends
       setTimeout(() => {
         clearInterval(liveInterval);
-        // Final draw: highlight the landed segment in red with "No"
         drawWheel(getPointerSegment());
-
-        // Show result
         msgEl.textContent = "No.";
         msgEl.style.opacity = 1;
         tryBtn.style.display = 'inline-block';
@@ -440,13 +408,11 @@
       initDust();
       drawDust();
 
-      // Show first stardust thought immediately (no lock needed on first show)
       const display = document.getElementById('random-display');
       lastStarIdx = 0;
       display.textContent = MY_DATA.stardustThoughts[0];
       setTimeout(() => display.classList.add('visible'), 200);
 
-      // Scroll reveal
       const obs = new IntersectionObserver(
         entries => entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); }),
         { threshold: 0.1 }
