@@ -51,13 +51,52 @@
     .quiet-heading { font-family: 'Cormorant Garamond', serif; font-weight: 300; font-size: clamp(2rem, 7vw, 3.2rem); margin-bottom: 2rem; border-bottom: 1px solid #f0f0f0; padding-bottom: 10px; display: inline-block; }
     .quiet-line { font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: clamp(0.9rem, 2.5vw, 1.2rem); text-transform: uppercase; letter-spacing: 0.4em; color: var(--accent); margin-bottom: 1.2rem; transition: var(--transition-med); }
 
-    /* 4. STARDUST */
-    .random-area { text-align: center; cursor: pointer; padding: 15vh 12vw; transition: var(--transition-med); opacity: 0.4; }
-    #random-display { font-family: 'Cormorant Garamond', serif; font-size: clamp(1.6rem, 5.5vw, 2.8rem); font-weight: 500; font-style: italic; min-height: 80px; max-width: 850px; margin: 0 auto; line-height: 1.2; }
-    .word { display: inline-block; opacity: 0; transform: translateY(12px); filter: blur(4px); transition: all 0.8s var(--ease); margin: 0 0.15em; }
-    #random-display.visible .word { opacity: 1; transform: translateY(0); filter: blur(0px); }
+    /* 4. STARDUST — tap-based, no word delay */
+    .random-area {
+      text-align: center;
+      cursor: pointer;
+      padding: 15vh 12vw;
+      transition: var(--transition-med);
+      opacity: 0.5;
+      position: relative;
+    }
+    .random-area:active { opacity: 0.7; }
 
-    /* 5. LIBRARY - ADAPTIVE GRID */
+    #random-display {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(1.6rem, 5.5vw, 2.8rem);
+      font-weight: 500;
+      font-style: italic;
+      min-height: 80px;
+      max-width: 850px;
+      margin: 0 auto;
+      line-height: 1.4;
+      /* Single fade — no per-word animation */
+      opacity: 0;
+      transform: translateY(10px) scale(0.99);
+      filter: blur(6px);
+      transition: opacity 0.7s var(--ease), transform 0.7s var(--ease), filter 0.7s var(--ease);
+    }
+    #random-display.visible {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      filter: blur(0px);
+    }
+    .tap-hint {
+      position: absolute;
+      bottom: 6vh;
+      left: 50%;
+      transform: translateX(-50%);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.6rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: #ccc;
+      pointer-events: none;
+      transition: opacity 0.4s;
+    }
+
+    /* 5. LIBRARY */
     .library-section { min-height: 60vh; padding-top: 5vh; }
     .tabs { display:flex; gap:2rem; margin-bottom:3rem; border-bottom:1px solid #f0f0f0; padding-bottom:0.8rem; }
     .tab { font-family:'Playfair Display', serif; font-size:0.9rem; cursor:pointer; opacity:0.3; transition: 0.3s; }
@@ -123,8 +162,10 @@
     <div class="quiet-content" id="quiet-list"></div>
   </section>
 
-  <section class="reveal random-area" id="stardust-box" onclick="igniteStardust(true)">
+  <!-- STARDUST: tap to change, instant fade, no word-length delay -->
+  <section class="reveal random-area" id="stardust-box">
     <div id="random-display"></div>
+    <span class="tap-hint">tap to stir</span>
   </section>
 
   <section class="reveal library-section">
@@ -152,12 +193,20 @@
 
   <script>
     const MY_DATA = {
-      heroQuote: { lines: ["I can never read all the books I want.", "I can never live all the lives I imagine.", "I want to feel every shade of experience", "and i am terribly limited."], author: "Sylvia Plath" },
-      identity: { name: "Krishna.", taglines: [" Appreciate Life ","Kind"] },
+      heroQuote: {
+        lines: [
+          "I can never read all the books I want.",
+          "I can never live all the lives I imagine.",
+          "I want to feel every shade of experience",
+          "and i am terribly limited."
+        ],
+        author: "Sylvia Plath"
+      },
+      identity: { name: "Krishna.", taglines: ["   ", "Kind"] },
       library: {
         reading: [
           { title: "The Wedding Season", author: "Katy Birchall", desc: "A fake-dating pact spirals into real feelings.", cover: "https://raw.githubusercontent.com/bkrishnareddy-ai/Self/main/71Cc-xkldAL._AC_UF894%2C1000_QL80_.jpg" },
-          { title: "The Invisible Life of Addie LaRue", author: "V. E. Schwab", desc: "A life no one remembers.", cover: "https://raw.githubusercontent.com/bkrishnareddy-ai/Self/main/ve%20saHAB.jpg" } 
+          { title: "The Invisible Life of Addie LaRue", author: "V. E. Schwab", desc: "A life no one remembers.", cover: "https://raw.githubusercontent.com/bkrishnareddy-ai/Self/main/ve%20saHAB.jpg" }
         ],
         archive: [
           { title: "A Study in Scarlet", author: "Sir Arthur Conan Doyle", desc: "Introduction of Sherlock Holmes.", cover: "https://raw.githubusercontent.com/bkrishnareddy-ai/Self/main/A%20Study%20in%20Scarlet.jpg" },
@@ -166,53 +215,88 @@
         ]
       },
       quietHours: ["Philosophy. Literature. History.", "Losing at chess.", "voilà français", "Drawing badly."],
-      stardustThoughts: [" when nothing softens the greif  may grief soften Me ."]
+      stardustThoughts: [
+        "when nothing softens the grief — may grief soften me.",
+        "some silences are louder than everything.",
+        "i collect feelings i don't yet have words for.",
+        "the world keeps spinning even on still days.",
+        "every version of me believed it was the final one."
+      ]
     };
 
-    let currentTab = 'reading', lastIdx = -1, stardustTimer, isLocked = false, rot = 0;
+    let currentTab = 'reading', lastStarIdx = -1, starLocked = false, rot = 0;
+
+    // ─── BUILD ───────────────────────────────────────────────────────────────
 
     function buildSite() {
       const hero = document.getElementById('hero-section');
       const linesHTML = MY_DATA.heroQuote.lines.map((line, i) => {
         const delay = 0.2 + (i * 0.3);
         if (line.includes("and i am terribly limited")) {
-          return `<span class="q-line" style="animation-delay: ${delay}s">and <span class="q-bold">i am terribly limited.</span></span>`;
+          return `<span class="q-line" style="animation-delay:${delay}s">and <span class="q-bold">i am terribly limited.</span></span>`;
         }
-        return `<span class="q-line" style="animation-delay: ${delay}s">${line}</span>`;
+        return `<span class="q-line" style="animation-delay:${delay}s">${line}</span>`;
       }).join('');
-
       const authorDelay = 0.2 + (MY_DATA.heroQuote.lines.length * 0.3) + 0.4;
+      hero.innerHTML = `<div class="quote-stack">${linesHTML}</div><div class="author-fade" style="animation-delay:${authorDelay}s">~ ${MY_DATA.heroQuote.author}</div>`;
 
-      hero.innerHTML = `
-        <div class="quote-stack">${linesHTML}</div>
-        <div class="author-fade" style="animation-delay: ${authorDelay}s">~ ${MY_DATA.heroQuote.author}</div>`;
-      
-      document.getElementById('identity-section').innerHTML = `<span class="name">${MY_DATA.identity.name}</span>${MY_DATA.identity.taglines.map((tag, i) => `<span class="sub-text" style="opacity: ${1 - (i*0.5)}">${tag}</span>`).join('')}`;
-      document.getElementById('quiet-list').innerHTML = MY_DATA.quietHours.map(q => `<div class="quiet-line">${q}</div>`).join('');
+      document.getElementById('identity-section').innerHTML =
+        `<span class="name">${MY_DATA.identity.name}</span>` +
+        MY_DATA.identity.taglines.map((tag, i) =>
+          `<span class="sub-text" style="opacity:${1 - i * 0.5}">${tag}</span>`
+        ).join('');
+
+      document.getElementById('quiet-list').innerHTML =
+        MY_DATA.quietHours.map(q => `<div class="quiet-line">${q}</div>`).join('');
+
       renderLibrary();
     }
 
-    function igniteStardust(manual = false) {
-      if (manual && isLocked) return;
-      if (manual) { isLocked = true; setTimeout(() => isLocked = false, 1000); }
+    // ─── STARDUST — single fade, tap-driven, NO word-count delay ────────────
+
+    function igniteStardust() {
+      if (starLocked) return;
+      starLocked = true;
+
       const display = document.getElementById('random-display');
-      if (stardustTimer) clearInterval(stardustTimer);
+
+      // Fade OUT
       display.classList.remove('visible');
+
       setTimeout(() => {
-        let n; do { n = Math.floor(Math.random() * MY_DATA.stardustThoughts.length); } while (n === lastIdx);
-        lastIdx = n;
-        display.innerHTML = MY_DATA.stardustThoughts[n].split(' ').map((w, i) => `<span class="word" style="transition-delay: ${i * 0.1}s">${w}</span>`).join(' ');
-        display.offsetHeight; display.classList.add('visible');
-        stardustTimer = setInterval(() => igniteStardust(false), 5000);
-      }, manual ? 100 : 800);
+        // Pick a different thought
+        let n;
+        do { n = Math.floor(Math.random() * MY_DATA.stardustThoughts.length); }
+        while (n === lastStarIdx && MY_DATA.stardustThoughts.length > 1);
+        lastStarIdx = n;
+
+        // Set text as plain text — no span splitting, no per-word delay
+        display.textContent = MY_DATA.stardustThoughts[n];
+
+        // Force reflow then fade IN
+        display.offsetHeight;
+        display.classList.add('visible');
+
+        // Unlock after transition finishes (~700ms)
+        setTimeout(() => { starLocked = false; }, 750);
+      }, 350); // wait for fade-out before swapping text
     }
+
+    // Attach tap/click — both touch and mouse
+    document.getElementById('stardust-box').addEventListener('click', igniteStardust);
+    document.getElementById('stardust-box').addEventListener('touchend', (e) => {
+      e.preventDefault(); // prevent ghost click
+      igniteStardust();
+    }, { passive: false });
+
+    // ─── LIBRARY ─────────────────────────────────────────────────────────────
 
     function renderLibrary() {
       const container = document.getElementById('books-container');
       const list = currentTab === 'reading' ? MY_DATA.library.reading : MY_DATA.library.archive;
       container.innerHTML = list.map((b, i) => `
-        <div class="book-item" style="animation-delay: ${i * 0.1}s" onclick="toggleBook(this)">
-          <div class="cover-wrapper"><img src="${b.cover}" loading="lazy"></div>
+        <div class="book-item" style="animation-delay:${i * 0.1}s" onclick="toggleBook(this)">
+          <div class="cover-wrapper"><img src="${b.cover}" loading="lazy" alt="${b.title}"></div>
           <div class="book-info">
             <span class="book-title">${b.title}</span>
             <span class="book-author">${b.author}</span>
@@ -222,63 +306,155 @@
     }
 
     function toggleBook(el) {
-      const active = el.classList.contains('active');
+      const wasActive = el.classList.contains('active');
       document.querySelectorAll('.book-item').forEach(b => b.classList.remove('active'));
-      if(!active) el.classList.add('active');
+      if (!wasActive) el.classList.add('active');
     }
 
     function switchTab(tab, el) {
       currentTab = tab === 'library' ? 'archive' : 'reading';
       document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-      el.classList.add('active'); renderLibrary();
+      el.classList.add('active');
+      renderLibrary();
     }
+
+    // ─── DUST CANVAS ─────────────────────────────────────────────────────────
 
     const dCanvas = document.getElementById('dust-canvas'), dctx = dCanvas.getContext('2d');
     let pts = [];
     function initDust() {
-      dCanvas.width = window.innerWidth; dCanvas.height = window.innerHeight;
-      pts = []; for(let i=0; i<30; i++) pts.push({ x: Math.random()*innerWidth, y: Math.random()*innerHeight, vx: (Math.random()-0.5)*0.05, vy: (Math.random()-0.5)*0.05, s: Math.random()*1 });
+      dCanvas.width = window.innerWidth;
+      dCanvas.height = window.innerHeight;
+      pts = [];
+      for (let i = 0; i < 30; i++) {
+        pts.push({
+          x: Math.random() * innerWidth, y: Math.random() * innerHeight,
+          vx: (Math.random() - 0.5) * 0.05, vy: (Math.random() - 0.5) * 0.05,
+          s: Math.random() * 1
+        });
+      }
     }
     function drawDust() {
-      dctx.clearRect(0,0,innerWidth,innerHeight); dctx.fillStyle = "rgba(0,0,0,0.04)";
-      pts.forEach(p => { p.x += p.vx; p.y += p.vy; if(p.x<0) p.x=innerWidth; if(p.x>innerWidth) p.x=0; if(p.y<0) p.y=innerHeight; if(p.y>innerHeight) p.y=0; dctx.beginPath(); dctx.arc(p.x, p.y, p.s, 0, Math.PI*2); dctx.fill(); });
+      dctx.clearRect(0, 0, innerWidth, innerHeight);
+      dctx.fillStyle = "rgba(0,0,0,0.04)";
+      pts.forEach(p => {
+        p.x += p.vx; p.y += p.vy;
+        if (p.x < 0) p.x = innerWidth; if (p.x > innerWidth) p.x = 0;
+        if (p.y < 0) p.y = innerHeight; if (p.y > innerHeight) p.y = 0;
+        dctx.beginPath(); dctx.arc(p.x, p.y, p.s, 0, Math.PI * 2); dctx.fill();
+      });
       requestAnimationFrame(drawDust);
     }
 
+    // ─── WHEEL — RIGGED: always shows "No." regardless of landing ────────────
+
     const wCanvas = document.getElementById('wheel'), wctx = wCanvas.getContext('2d');
+    // All labels are decoys — the result is always "No."
     const opts = ["Email", "LinkedIn", "Instagram", "Threads", "Slack", "TikTok", "X", "WhatsApp"];
-    function drawWheel(rigIdx = -1) {
-      const s = (Math.PI*2)/8; wctx.clearRect(0,0,400,400);
-      opts.forEach((t, i) => {
-        wctx.save(); wctx.translate(200,200); wctx.rotate(i*s); wctx.beginPath(); wctx.moveTo(0,0); wctx.arc(0,0,190,0,s);
-        wctx.fillStyle = i%2===0 ? "#fff" : "#fbfbfa"; wctx.fill();
-        wctx.rotate(s/2); wctx.textAlign="right"; wctx.fillStyle="#444"; wctx.font="300 12px Inter";
-        wctx.fillText(i === rigIdx ? "No" : t, 170, 5); wctx.restore();
+    let wheelSpinning = false;
+
+    function drawWheel(highlightIdx = -1) {
+      const slice = (Math.PI * 2) / opts.length;
+      wctx.clearRect(0, 0, 400, 400);
+      opts.forEach((label, i) => {
+        wctx.save();
+        wctx.translate(200, 200);
+        wctx.rotate(i * slice);
+        wctx.beginPath();
+        wctx.moveTo(0, 0);
+        wctx.arc(0, 0, 190, 0, slice);
+        wctx.fillStyle = i % 2 === 0 ? "#fff" : "#fbfbfa";
+        wctx.fill();
+        wctx.strokeStyle = "#f0f0f0";
+        wctx.lineWidth = 0.5;
+        wctx.stroke();
+        wctx.rotate(slice / 2);
+        wctx.textAlign = "right";
+        // RIGGED: if this segment is highlighted (under pointer), show "No"
+        wctx.fillStyle = (i === highlightIdx) ? "#c00" : "#444";
+        wctx.font = (i === highlightIdx) ? "600 12px Inter" : "300 12px Inter";
+        wctx.fillText(i === highlightIdx ? "No" : label, 170, 5);
+        wctx.restore();
       });
     }
 
-    function startWheelProcess() { 
-      document.getElementById('initial-spin-wrap').style.display='none'; 
-      document.getElementById('wheel-interface').style.display='block'; 
-      setTimeout(() => { document.getElementById('wheel-container').style.opacity=1; drawWheel(); performSpin(); }, 50); 
-    }
-
-    function performSpin() { 
-      document.getElementById('wheel-msg').style.opacity=0; document.getElementById('try-again-btn').style.display='none'; 
-      rot += (3600 + Math.random()*360); wCanvas.style.transform = `rotate(${rot}deg)`; 
-      const loop = setInterval(() => {
-        const matrix = new WebKitCSSMatrix(window.getComputedStyle(wCanvas).transform);
-        const angle = (Math.atan2(matrix.b, matrix.a) * (180/Math.PI) + 360) % 360;
-        drawWheel(Math.floor(((360 - angle + 270) % 360) / 45));
+    function startWheelProcess() {
+      document.getElementById('initial-spin-wrap').style.display = 'none';
+      document.getElementById('wheel-interface').style.display = 'block';
+      setTimeout(() => {
+        document.getElementById('wheel-container').style.opacity = 1;
+        drawWheel();
+        performSpin();
       }, 50);
-      setTimeout(() => { clearInterval(loop); document.getElementById('wheel-msg').style.opacity=1; document.getElementById('try-again-btn').style.display='inline-block'; }, 5100); 
     }
 
-    window.onload = () => { buildSite(); initDust(); drawDust(); igniteStardust(); const obs = new IntersectionObserver(e => e.forEach(n => n.isIntersecting && n.target.classList.add('visible')), {threshold: 0.1}); document.querySelectorAll('.reveal').forEach(r => obs.observe(r)); };
+    function getPointerSegment() {
+      // Read the live CSS rotation of the canvas, find which segment is under the top pointer
+      const style = window.getComputedStyle(wCanvas);
+      const matrix = new DOMMatrix(style.transform);
+      // atan2 gives the rotation angle in radians
+      let angleDeg = (Math.atan2(matrix.b, matrix.a) * (180 / Math.PI) + 360) % 360;
+      // Pointer is at top (270° / -90°). Segment index under pointer:
+      const segmentDeg = 360 / opts.length;
+      const pointerOffset = (360 - angleDeg + 270) % 360;
+      return Math.floor(pointerOffset / segmentDeg) % opts.length;
+    }
+
+    function performSpin() {
+      if (wheelSpinning) return;
+      wheelSpinning = true;
+
+      const msgEl = document.getElementById('wheel-msg');
+      const tryBtn = document.getElementById('try-again-btn');
+      msgEl.style.opacity = 0;
+      tryBtn.style.display = 'none';
+
+      // Add a large random spin amount
+      rot += 3600 + Math.random() * 720;
+      wCanvas.style.transition = 'transform 5s cubic-bezier(0.15, 0, 0.15, 1)';
+      wCanvas.style.transform = `rotate(${rot}deg)`;
+
+      // While spinning, live-update the wheel to show "No" on whatever segment is under pointer
+      const liveInterval = setInterval(() => {
+        drawWheel(getPointerSegment());
+      }, 40);
+
+      // After spin ends
+      setTimeout(() => {
+        clearInterval(liveInterval);
+        // Final draw: highlight the landed segment in red with "No"
+        drawWheel(getPointerSegment());
+
+        // Show result
+        msgEl.textContent = "No.";
+        msgEl.style.opacity = 1;
+        tryBtn.style.display = 'inline-block';
+        wheelSpinning = false;
+      }, 5150);
+    }
+
+    // ─── INIT ─────────────────────────────────────────────────────────────────
+
+    window.onload = () => {
+      buildSite();
+      initDust();
+      drawDust();
+
+      // Show first stardust thought immediately (no lock needed on first show)
+      const display = document.getElementById('random-display');
+      lastStarIdx = 0;
+      display.textContent = MY_DATA.stardustThoughts[0];
+      setTimeout(() => display.classList.add('visible'), 200);
+
+      // Scroll reveal
+      const obs = new IntersectionObserver(
+        entries => entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); }),
+        { threshold: 0.1 }
+      );
+      document.querySelectorAll('.reveal').forEach(r => obs.observe(r));
+    };
+
     window.onresize = initDust;
   </script>
 </body>
 </html>
-
-
-
